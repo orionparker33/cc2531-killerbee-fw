@@ -191,7 +191,7 @@ const struct usb_st_device_descriptor device_descriptor =
     0x0000,
     1,
     2,
-    0,
+    3, /* iSerialNumber: chip IEEE address (usb-serial.c) */
     1
   };
 
