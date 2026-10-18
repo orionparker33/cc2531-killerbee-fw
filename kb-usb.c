@@ -140,21 +140,27 @@ static void input_handler(unsigned char c)
               /* Command at offset 1. */
               kb_event->command = rx_buffer[1];
               kb_event->payload_size = g_pkt_len-3;
-              
-              /* Allocate a new payload buffer. */
-              kb_event->payload = (uint8_t *)malloc(sizeof(uint8_t) * kb_event->payload_size);
-              if (kb_event->payload != NULL)
+              kb_event->payload = NULL;
+
+              if (kb_event->payload_size > 0)
               {
-                /* Copy payload. */
-                memcpy(kb_event->payload, &rx_buffer[2], kb_event->payload_size);
-              }
-              else
-              {
-                kb_event->payload = NULL;
+                /* Allocate a new payload buffer. */
+                kb_event->payload = (uint8_t *)malloc(sizeof(uint8_t) * kb_event->payload_size);
+                if (kb_event->payload != NULL)
+                {
+                  /* Copy payload. */
+                  memcpy(kb_event->payload, &rx_buffer[2], kb_event->payload_size);
+                }
               }
 
-              /* Broadcast event */
-              process_post(PROCESS_BROADCAST, kb_event_message, (void *)kb_event);
+              /* Broadcast event, or drop the command if we are out of memory. */
+              if (((kb_event->payload_size > 0) && (kb_event->payload == NULL)) ||
+                  (process_post(PROCESS_BROADCAST, kb_event_message, (void *)kb_event) != PROCESS_ERR_OK))
+              {
+                if (kb_event->payload != NULL)
+                  free(kb_event->payload);
+                free((void *)kb_event);
+              }
             }
           }
 

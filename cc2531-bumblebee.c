@@ -213,7 +213,8 @@ PROCESS_THREAD(cc2531_rf_sniffer, ev, data)
             memset(p_pkt, 0, sizeof(packet_t));
             memcpy(p_pkt->payload, packet_buf, pkt_size+2);
             p_pkt->size = (uint8_t)pkt_size + 2;
-            process_post(&cc2531_bumlblebee_process, event_packet_received, p_pkt);
+            if (process_post(&cc2531_bumlblebee_process, event_packet_received, p_pkt) != PROCESS_ERR_OK)
+              free(p_pkt);
           }
         }
       }
